@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/data/jpa
+		http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+
+
+    <!--spring 和spring data jpa 的配置-->
+    <!--1创建entityManagerFactory 对象交给spring容器管理-->
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+        <!--配置的是扫描的包（实体类所在的包）-->
+        <property name="packagesToScan" value="cn.itcast4.domain"></property>
+        <!--jpa的实现方式-->
+        <property name="persistenceProvider">
+            <bean class="org.hibernate.jpa.HibernatePersistenceProvider"></bean>
+        </property>
+        <!--jpa的适配器-->
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <!--自动创建数据库表-->
+                <property name="generateDdl" value="false"/>
+                <!--数据库类型(全部大写)-->
+                <property name="database" value="MYSQL"/>
+                <!--数据库方言-->
+                <property name="databasePlatform" value="org.hibernate.dialect.MySQLDialect"/>
+                <!--是否显示sql语句-->
+                <property name="showSql" value="true"/>
+            </bean>
+        </property>
+        <!--配置jpa的方言
+         指定一些高级的特性-->
+        <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect"></bean>
+        </property>
+
+        <!--注入jpa的配置信息 加载jpa的基本配置信息和jpa的实现方式（hibernate）的配置信息
+        hibernate.hbm2ddl.auto:自动创建数据库表 create: 每次都重新创建数据库表 update :有表的话不创建-->
+        <property name="jpaProperties">
+            <props>
+                 <prop key="hibernate.hbm2ddl.auto">update</prop>
+            </props>
+        </property>
+
+
+    </bean>
+    <!--2创建数据库连接池-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="root"></property>
+        <property name="password" value="123456"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://127.0.0.1:3306/hy_info?characterEncoding=utf8&amp;useUnicode=true&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai"></property>
+       <property name="driverClass" value="com.mysql.cj.jdbc.Driver"></property>
+    </bean>
+    <!--3整合spring dataJpa 声明对此包下的dao接口进行动态代理增强-->
+    <jpa:repositories base-package="cn.itcast4.dao" transaction-manager-ref="transactionManager"
+    entity-manager-factory-ref="entityManagerFactory">
+    </jpa:repositories>
+
+    <!--4配置事务管理器-->
+  <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+      <property name="entityManagerFactory" ref="entityManagerFactory"></property>
+  </bean>
+    <!--5spring的声明式事务-->
+    <!--6配置包扫描，扫描工程包下的所有注解-->
+    <context:component-scan base-package="cn.itcast4"></context:component-scan>
+</beans>
